@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  AGENT
+  ADMIN
+  SUPERADMIN
+}
+
+model User {
+  id        String   @id @default(uuid()) @map("user_id")
+  name      String?  @db.VarChar(100)
+  username  String?  @unique @db.VarChar(100)
+  email     String   @unique @db.VarChar(100)
+  password  String   @db.Char(60)
+  image     String?  @db.VarChar(225)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  status    Boolean @default(false)
+  Role      Role     @default(USER)
+
+  accounts Account[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(uuid()) @map("account_id")
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.VarChar(100)
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Admin {
+  id        String   @id @default(uuid()) @map("admin_id")
+  name      String?  @db.VarChar(100)
+  username  String?  @unique @db.VarChar(100)
+  email     String   @unique @db.VarChar(100)
+  password  String   @db.Char(60)
+  image     String?  @db.VarChar(225)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  Role      Role     @default(SUPERADMIN)
+  status    Boolean
+
+  @@map("admins")
+}
+
+model Tour {
+  id          String   @id @default(uuid()) @map("tour_id")
+  name        String   @db.VarChar(150)
+  slug        String   @unique
+  price       String   @db.VarChar(25)
+  description String   @db.Text
+  image       String   @db.VarChar(200)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  status      Boolean
+
+  @@map("tours")
+}
